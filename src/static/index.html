@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>K-Sattie Feasibility Analysis Console</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7611240025188124"
+         crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <h1 class="hardcoded-copy">K-Sattie Feasibility Analysis Console</h1>
+          <p class="hero-text hardcoded-copy">
+            요청 후보건을 등록하고, 입력값을 바꿔가며 후보별 가능성 판정 결과를 관리할 수 있습니다.
+            고객 원본 요청 조건, 요청 전체 feasibility 결과, 후보별 현재 입력 기준 평가와 실행 이력을 한 화면에서 확인합니다.
+          </p>
+        </div>
+        <div class="hero-metrics">
+          <div class="metric-card">
+            <span class="metric-label hardcoded-copy">기준 API</span>
+            <strong id="api-base">same-origin</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label hardcoded-copy">실시간 상태</span>
+            <strong id="health-status">checking</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label hardcoded-copy">요청 수</span>
+            <strong id="request-count">2</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="sidebar">
+          <section class="panel summary-section-panel">
+            <div class="panel-head">
+              <p class="eyebrow hardcoded-copy">Feasibility Analysis</p>
+              <h2 class="hardcoded-copy">요청 목록</h2>
+            </div>
+            <div id="request-list" class="entity-list"></div>
+          </section>
+        </aside>
+
+        <section class="content">
+          <section class="panel case-header">
+            <div class="case-header-copy">
+              <p class="eyebrow hardcoded-copy">선택한 Feasibility Analysis 요청건</p>
+              <h2 id="case-title" class="hardcoded-copy">시나리오 불러오는 중</h2>
+              <p id="case-description" class="case-description hardcoded-copy"></p>
+            </div>
+            <div class="case-tags">
+              <span class="tag" id="case-request-code">request</span>
+              <span class="tag" id="case-sensor-type">sensor</span>
+            </div>
+          </section>
+
+          <section class="panel request-origin-panel is-collapsed" id="request-info-panel">
+            <div class="panel-head panel-head-inline">
+              <div>
+                <p class="eyebrow hardcoded-copy">요청 원본</p>
+                <h2 class="hardcoded-copy">고객요청정보 및 정책정보</h2>
+              </div>
+              <button
+                id="request-info-toggle"
+                class="collapse-toggle hardcoded-copy"
+                type="button"
+                aria-expanded="false"
+                aria-controls="request-info-panel-body"
+                aria-label="고객 요청 정보 및 정책 정보 섹션 열기 또는 닫기"
+              >+</button>
+            </div>
+            <div id="request-info-panel-body" class="collapsible-body" hidden>
+              <section class="grid-two">
+                <article class="panel request-origin-panel">
+                  <div class="panel-head">
+                    <p class="eyebrow hardcoded-copy">요청 원본</p>
+                    <h2 class="hardcoded-copy">고객 요청 정보</h2>
+                  </div>
+                  <dl class="definition-grid" id="request-overview"></dl>
+                </article>
+
+                <article class="panel request-origin-panel">
+                  <div class="panel-head">
+                    <p class="eyebrow hardcoded-copy">원본 제약 프로필</p>
+                    <h2 class="hardcoded-copy">고객 요청 제한</h2>
+                  </div>
+                  <dl class="definition-grid" id="constraint-overview"></dl>
+                </article>
+              </section>
+
+              <section class="panel request-origin-panel">
+                <div class="panel-head">
+                  <p class="eyebrow hardcoded-copy">정책 해석</p>
+                  <h2 class="hardcoded-copy">정책 적용 정보</h2>
+                </div>
+                <dl class="definition-grid compact-definition-grid" id="policy-overview"></dl>
+              </section>
+            </div>
+          </section>
+
+          <section class="panel request-origin-panel is-collapsed" id="external-ref-panel">
+            <div class="panel-head panel-head-inline">
+              <div>
+                <p class="eyebrow hardcoded-copy">외부 연계</p>
+                <h2 class="hardcoded-copy">타당성분석 요청 생성(외부기관 요청 Simulation)</h2>
+              </div>
+              <button
+                id="external-ref-toggle"
+                class="collapse-toggle hardcoded-copy"
+                type="button"
+                aria-expanded="false"
+                aria-controls="external-ref-panel-body"
+                aria-label="외부 연계 섹션 열기 또는 닫기"
+              >+</button>
+            </div>
+            <div id="external-ref-panel-body" class="collapsible-body" hidden>
+              <div class="grid-two grouped-external-grid">
+                <section class="panel request-origin-panel">
+                  <div class="panel-head">
+                    <p class="eyebrow hardcoded-copy">요청 접수</p>
+                    <h2 class="hardcoded-copy">새 요청 생성</h2>
+                  </div>
+                  <form id="request-create-form" class="sim-form compact-form">
+                    <div class="form-grid compact-form-grid">
+                      <label class="field field-span-2">
+                        <span class="hardcoded-copy">요청 제목</span>
+                        <input id="request-create-title" type="text" />
+                      </label>
+                      <label class="field field-span-2">
+                        <span class="hardcoded-copy">요청 설명</span>
+                        <input id="request-create-description" type="text" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">정책</span>
+                        <select id="request-create-policy">
+                          <option value="1">KOMPSAT Standard Optical</option>
+                          <option value="2">KOMPSAT SAR Standard</option>
+                        </select>
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">요청 우선순위</span>
+                        <select id="request-create-priority">
+                          <option value="STANDARD">STANDARD</option>
+                          <option value="PRIORITY">PRIORITY</option>
+                          <option value="URGENT">URGENT</option>
+                        </select>
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">기관명</span>
+                        <input id="request-create-org-name" type="text" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">요청자명</span>
+                        <input id="request-create-requester-name" type="text" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">요청 시작</span>
+                        <input id="request-create-start-at" type="datetime-local" step="1" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">요청 종료</span>
+                        <input id="request-create-end-at" type="datetime-local" step="1" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">마감시각</span>
+                        <input id="request-create-deadline-at" type="datetime-local" step="1" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">모니터링 횟수</span>
+                        <input id="request-create-monitoring-count" type="number" min="1" step="1" value="1" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">AOI 면적 (km²)</span>
+                        <input id="request-create-area-km2" type="number" min="1" step="0.1" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">AOI 중심 경도</span>
+                        <input id="request-create-centroid-lon" type="number" min="-180" max="180" step="0.0001" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">AOI 중심 위도</span>
+                        <input id="request-create-centroid-lat" type="number" min="-90" max="90" step="0.0001" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">AOI 방향 (deg)</span>
+                        <input id="request-create-dominant-axis-deg" type="number" min="0" max="180" step="0.1" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">외부 시스템 코드</span>
+                        <input id="request-create-external-source" type="text" value="CUSTOMER_PORTAL" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">외부 요청번호</span>
+                        <input id="request-create-external-code" type="text" />
+                      </label>
+                    </div>
+                    <div class="form-actions">
+                      <button class="action-button action-secondary hardcoded-copy" id="request-create-submit" type="submit">새 요청 저장</button>
+                    </div>
+                  </form>
+                </section>
+
+                <section class="panel request-origin-panel">
+                  <div class="panel-head">
+                    <p class="eyebrow hardcoded-copy">외부 연계</p>
+                    <h2 class="hardcoded-copy">외부 요청번호 매핑</h2>
+                  </div>
+                  <div id="external-ref-list" class="entity-list compact-entity-list"></div>
+                  <form id="external-ref-form" class="sim-form compact-form">
+                    <div class="form-grid">
+                      <label class="field">
+                        <span class="hardcoded-copy">외부 시스템 코드</span>
+                        <input id="external-ref-source-system-code" type="text" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">외부 요청번호</span>
+                        <input id="external-ref-code" type="text" />
+                      </label>
+                      <label class="field field-span-2">
+                        <span class="hardcoded-copy">외부 요청 제목</span>
+                        <input id="external-ref-title" type="text" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">외부 기관명</span>
+                        <input id="external-ref-org-name" type="text" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">외부 요청자명</span>
+                        <input id="external-ref-requester-name" type="text" />
+                      </label>
+                      <label class="field">
+                        <span class="hardcoded-copy">접수시각 (UTC)</span>
+                        <input id="external-ref-received-at" type="datetime-local" step="1" />
+                      </label>
+                      <label class="field panel-head-toggle">
+                        <span class="hardcoded-copy">기본 외부 참조</span>
+                        <input id="external-ref-is-primary" type="checkbox" checked />
+                      </label>
+                    </div>
+                    <div class="form-actions">
+                      <button class="action-button action-secondary hardcoded-copy" id="external-ref-save" type="submit">외부 요청번호 저장</button>
+                    </div>
+                    <p id="external-ref-status" class="form-status">대기 중</p>
+                  </form>
+                </section>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel summary-section-panel">
+            <div class="panel-head">
+              <p class="eyebrow hardcoded-copy">proposal</p>
+              <h2 class="hardcoded-copy">Feasibility Analysis Summary</h2>
+            </div>
+            <section class="grid-summary summary-panel-grid">
+              <article class="summary-card accent-amber">
+                <span class="summary-label hardcoded-copy">최종 판정</span>
+                <strong id="summary-verdict">-</strong>
+                <p id="summary-message">-</p>
+              </article>
+              <article class="summary-card accent-blue">
+                <span class="summary-label hardcoded-copy">전체 확률</span>
+                <strong id="summary-probability">-</strong>
+                <p id="summary-risk">-</p>
+              </article>
+              <article class="summary-card accent-green">
+                <span class="summary-label hardcoded-copy">최적안</span>
+                <strong id="summary-candidate">-</strong>
+                <p id="summary-candidate-caption">-</p>
+              </article>
+            </section>
+            <div class="table-shell summary-table-shell">
+              <table class="summary-overview-table">
+                <tbody id="proposal-overview"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+              <div class="panel-head">
+                <p class="eyebrow hardcoded-copy">후보 테이블</p>
+                <h2 class="hardcoded-copy">수행계획 후보별 검증 결과</h2>
+              </div>
+            <div class="table-shell">
+              <table class="data-table" id="candidate-table">
+                <thead>
+                  <tr>
+                    <th class="hardcoded-copy">후보</th>
+                    <th class="hardcoded-copy">상태</th>
+                    <th class="hardcoded-copy">촬영기회</th>
+                    <th class="hardcoded-copy">오프나디르</th>
+                    <th class="hardcoded-copy">입사각</th>
+                    <th class="hardcoded-copy">데이터량</th>
+                    <th class="hardcoded-copy">P(total)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="grid-two">
+            <article class="panel request-candidate-panel">
+              <div class="panel-head">
+                <p class="eyebrow hardcoded-copy">후보건 관리</p>
+                <h2 class="hardcoded-copy">수행계획 후보 목록</h2>
+              </div>
+              <div id="request-candidate-list" class="entity-list"></div>
+              <div class="form-actions">
+                <button class="action-button action-secondary hardcoded-copy" id="candidate-create-new" type="button">새 후보 준비</button>
+                <button class="action-button action-secondary hardcoded-copy" id="candidate-delete" type="button">선택 후보 삭제</button>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head panel-head-inline">
+                <div>
+                  <p class="eyebrow hardcoded-copy">후보건 입력기</p>
+                  <h2 class="hardcoded-copy">수행계획 후보 입력값 등록 및 수정</h2>
+                </div>
+                <label class="panel-head-toggle">
+                  <span class="hardcoded-copy">기준안 여부</span>
+                  <input id="candidate-is-baseline" name="candidate_is_baseline" type="checkbox" />
+                </label>
+              </div>
+              <form id="simulate-form" class="sim-form">
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="hardcoded-copy">후보 코드 (자동 생성)</span>
+                    <input id="candidate-code" name="candidate_code" type="text" readonly placeholder="저장 시 자동 생성" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">후보 제목</span>
+                    <input id="candidate-title" name="candidate_title" type="text" />
+                  </label>
+                  <label class="field field-span-2">
+                    <span class="hardcoded-copy">후보 설명</span>
+                    <input id="candidate-description" name="candidate_description" type="text" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">후보 상태</span>
+                    <select id="candidate-status" name="candidate_status">
+                      <option value="READY">READY</option>
+                      <option value="DRAFT">DRAFT</option>
+                      <option value="ARCHIVED">ARCHIVED</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">후보 순서</span>
+                    <input id="candidate-rank" name="candidate_rank" type="number" step="1" min="1" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">센서 유형</span>
+                    <select id="sim-sensor-type" name="sensor_type">
+                      <option value="OPTICAL">OPTICAL</option>
+                      <option value="SAR">SAR</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">우선순위</span>
+                    <select id="sim-priority-tier" name="priority_tier">
+                      <option value="STANDARD">STANDARD</option>
+                      <option value="PRIORITY">PRIORITY</option>
+                      <option value="URGENT">URGENT</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">면적 (km²)</span>
+                    <input id="sim-area-km2" name="area_km2" type="number" step="0.1" min="0.1" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">촬영 윈도우 (시간)</span>
+                    <input id="sim-window-hours" name="window_hours" type="number" step="1" min="1" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">촬영기회 시작시각</span>
+                    <input id="sim-opportunity-start-at" name="opportunity_start_at" type="datetime-local" step="1" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">촬영기회 종료시각</span>
+                    <input id="sim-opportunity-end-at" name="opportunity_end_at" type="datetime-local" step="1" />
+                  </label>
+                  <label class="field sensor-optical">
+                    <span class="hardcoded-copy">구름량 (%)</span>
+                    <input id="sim-cloud-pct" name="cloud_pct" type="number" step="1" min="0" max="100" />
+                  </label>
+                  <label class="field sensor-optical">
+                    <span class="hardcoded-copy">최대 구름 허용 (%)</span>
+                    <input id="sim-max-cloud-pct" name="max_cloud_pct" type="number" step="1" min="0" max="100" />
+                  </label>
+                  <label class="field sensor-optical">
+                    <span class="hardcoded-copy">필요 오프나디르 (도)</span>
+                    <input id="sim-required-off-nadir-deg" name="required_off_nadir_deg" type="number" step="0.1" min="0" max="60" />
+                  </label>
+                  <label class="field sensor-optical">
+                    <span class="hardcoded-copy">최대 오프나디르 (도)</span>
+                    <input id="sim-max-off-nadir-deg" name="max_off_nadir_deg" type="number" step="0.1" min="0" max="60" />
+                  </label>
+                  <label class="field sensor-sar">
+                    <span class="hardcoded-copy">예상 입사각 (도)</span>
+                    <input id="sim-predicted-incidence-deg" name="predicted_incidence_deg" type="number" step="0.1" min="0" max="60" />
+                  </label>
+                  <label class="field sensor-sar">
+                    <span class="hardcoded-copy">최소 입사각 (도)</span>
+                    <input id="sim-min-incidence-deg" name="min_incidence_deg" type="number" step="0.1" min="0" max="60" />
+                  </label>
+                  <label class="field sensor-sar">
+                    <span class="hardcoded-copy">최대 입사각 (도)</span>
+                    <input id="sim-max-incidence-deg" name="max_incidence_deg" type="number" step="0.1" min="0" max="60" />
+                  </label>
+                  <label class="field sensor-optical">
+                    <span class="hardcoded-copy">태양 고도 (도)</span>
+                    <input id="sim-sun-elevation-deg" name="sun_elevation_deg" type="number" step="0.1" min="0" max="90" />
+                  </label>
+                  <label class="field sensor-optical">
+                    <span class="hardcoded-copy">최소 태양 고도 (도)</span>
+                    <input id="sim-min-sun-elevation-deg" name="min_sun_elevation_deg" type="number" step="0.1" min="0" max="90" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">예상 커버리지</span>
+                    <input id="sim-coverage-ratio-predicted" name="coverage_ratio_predicted" type="number" step="0.01" min="0" max="1.2" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">요구 커버리지</span>
+                    <input id="sim-coverage-ratio-required" name="coverage_ratio_required" type="number" step="0.01" min="0" max="1" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">예상 데이터량 (Gbit)</span>
+                    <input id="sim-expected-data-volume-gbit" name="expected_data_volume_gbit" type="number" step="0.1" min="0.1" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">가용 레코더 용량 (Gbit)</span>
+                    <input id="sim-recorder-free-gbit" name="recorder_free_gbit" type="number" step="0.1" min="0.1" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">레코더 백로그 (Gbit)</span>
+                    <input id="sim-recorder-backlog-gbit" name="recorder_backlog_gbit" type="number" step="0.1" min="0" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">가용 다운링크 (Gbit)</span>
+                    <input id="sim-available-downlink-gbit" name="available_downlink_gbit" type="number" step="0.1" min="0.1" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">전력 마진 (%)</span>
+                    <input id="sim-power-margin-pct" name="power_margin_pct" type="number" step="0.1" min="0" max="100" />
+                  </label>
+                  <label class="field">
+                    <span class="hardcoded-copy">열 마진 (%)</span>
+                    <input id="sim-thermal-margin-pct" name="thermal_margin_pct" type="number" step="0.1" min="0" max="100" />
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button class="action-button action-secondary hardcoded-copy" id="reload-selected-candidate" type="button">선택 후보 다시 불러오기</button>
+                  <button class="action-button action-secondary hardcoded-copy" id="save-candidate" type="button">후보 저장</button>
+                  <button class="action-button action-secondary hardcoded-copy" type="submit">저장 후 검증 실행</button>
+                </div>
+              </form>
+            </article>
+          </section>
+
+          <section class="panel full-width-panel">
+              <div class="panel-head">
+                <p class="eyebrow hardcoded-copy">후보건 결과</p>
+                <h2 id="candidate-evaluation-title" class="hardcoded-copy">수행계획 후보별 현재 평가</h2>
+              </div>
+            <section class="grid-summary grid-summary-sim">
+              <article class="summary-card accent-amber">
+                <span class="summary-label hardcoded-copy">현재 판정</span>
+                <strong id="current-verdict">-</strong>
+                <p id="current-summary-message">-</p>
+              </article>
+              <article class="summary-card accent-blue">
+                <span class="summary-label hardcoded-copy">현재 확률</span>
+                <strong id="current-probability">-</strong>
+                <p id="current-dominant-risk">-</p>
+              </article>
+            </section>
+            <div class="grid-two sim-detail-grid">
+              <div>
+                <div class="subpanel-head">
+                  <h3 class="hardcoded-copy">현재 사유</h3>
+                </div>
+                <div id="current-reason-list" class="stack-list"></div>
+              </div>
+              <div>
+                <div class="subpanel-head">
+                  <h3 class="hardcoded-copy">현재 점검 결과</h3>
+                </div>
+                <div id="current-check-list" class="stack-list"></div>
+              </div>
+            </div>
+            <div class="subpanel-head">
+              <h3 class="hardcoded-copy">실행 이력</h3>
+            </div>
+            <div class="form-actions compact-actions">
+              <button class="action-button action-secondary hardcoded-copy" id="run-history-all" type="button">전체 이력</button>
+              <button class="action-button action-secondary hardcoded-copy" id="run-history-actions" type="button">추천안 실행만</button>
+            </div>
+            <div id="run-history-list" class="stack-list"></div>
+          </section>
+
+          <section class="grid-two">
+            <article class="panel">
+              <div class="panel-head">
+                <p class="eyebrow hardcoded-copy">확률</p>
+                <div class="title-with-tooltip">
+                  <h2 class="hardcoded-copy">모델 분해 결과</h2>
+                  <button
+                    class="info-tooltip hardcoded-copy"
+                    type="button"
+                    aria-label="모델 분해 결과 안내"
+                    data-tooltip="요청 전체 후보 기준 동적 평가가 갱신될 때 함께 바뀝니다. 폼 입력만 바꾸는 동안에는 즉시 갱신되지 않고, 저장 또는 저장 후 검증 실행처럼 요청 전체를 다시 계산할 때 갱신됩니다."
+                  >?</button>
+                </div>
+              </div>
+              <div id="probability-list" class="stack-list"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head">
+                <p class="eyebrow hardcoded-copy">권고 사항</p>
+                <div class="title-with-tooltip">
+                  <h2 class="hardcoded-copy">완화 제안</h2>
+                  <button
+                    class="info-tooltip hardcoded-copy"
+                    type="button"
+                    aria-label="완화 제안 안내"
+                    data-tooltip="요청 전체 후보 집합을 다시 계산해 조정 가능한 완화안이 있는 후보만 보여줍니다. current는 현재 입력값 또는 현재 access 상태, recommended는 엔진이 만든 완화안, gain은 그 완화안을 적용했을 때의 예상 확률 증가량입니다. 특정 후보를 저장 실행했다고 해서 항상 여기 나타나는 것은 아니며, geometry·cloud·recorder·downlink처럼 실제로 조정 가능한 파라미터가 있을 때만 제안이 생성됩니다."
+                  >?</button>
+                </div>
+              </div>
+              <div id="recommendation-list" class="stack-list"></div>
+            </article>
+          </section>
+
+          <section class="grid-two">
+            <article class="panel">
+              <div class="panel-head">
+                <p class="eyebrow hardcoded-copy">실패 및 위험</p>
+                <h2 class="hardcoded-copy">탈락 사유</h2>
+              </div>
+              <div id="reason-list" class="stack-list"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head">
+                <p class="eyebrow hardcoded-copy">점검 항목</p>
+                <h2 class="hardcoded-copy">자원 및 다운링크</h2>
+              </div>
+              <div id="check-list" class="stack-list"></div>
+            </article>
+          </section>
+        </section>
+      </main>
+
+      <footer class="page-footer">
+        Copyright © 2026 <strong>K-Sattie Sky Hub, K-Sattie Ground Tasking, K-Sattie DP/DA system.</strong>
+        All rights reserved.
+      </footer>
+    </div>
+
+    <script src="/static/app.js" type="module"></script>
+  </body>
+</html>
