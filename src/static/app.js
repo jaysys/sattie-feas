@@ -50,6 +50,9 @@ const elements = {
   requestInfoPanel: document.getElementById("request-info-panel"),
   requestInfoPanelBody: document.getElementById("request-info-panel-body"),
   requestInfoToggle: document.getElementById("request-info-toggle"),
+  reportGroupPanel: document.getElementById("report-group-panel"),
+  reportGroupPanelBody: document.getElementById("report-group-panel-body"),
+  reportGroupToggle: document.getElementById("report-group-toggle"),
   externalRefOpen: document.getElementById("external-ref-open"),
   externalRefModal: document.getElementById("external-ref-modal"),
   externalRefClose: document.getElementById("external-ref-close"),
@@ -446,6 +449,13 @@ function syncRequestInfoPanel() {
   elements.requestInfoPanelBody.hidden = !expanded;
   elements.requestInfoToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
   elements.requestInfoToggle.textContent = expanded ? "−" : "+";
+}
+
+function syncReportGroupPanel() {
+  const expanded = !elements.reportGroupPanel.classList.contains("is-collapsed");
+  elements.reportGroupPanelBody.hidden = !expanded;
+  elements.reportGroupToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+  elements.reportGroupToggle.textContent = expanded ? "−" : "+";
 }
 
 function setRequestCreateModalOpen(open) {
@@ -2083,6 +2093,11 @@ elements.requestInfoToggle.addEventListener("click", () => {
   syncRequestInfoPanel();
 });
 
+elements.reportGroupToggle.addEventListener("click", () => {
+  elements.reportGroupPanel.classList.toggle("is-collapsed");
+  syncReportGroupPanel();
+});
+
 elements.requestCreateForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
@@ -2155,6 +2170,7 @@ elements.runHistoryActions.addEventListener("click", () => {
 async function bootstrapPage() {
   try {
     syncRequestInfoPanel();
+    syncReportGroupPanel();
     await fetchRequestCatalog();
     const persisted = loadPersistedSelection();
     const initialRequest = state.requestCatalog.find(

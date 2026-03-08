@@ -118,11 +118,22 @@
             </div>
           </section>
 
-          <section class="panel report-group-panel">
-            <div class="panel-head">
-              <p class="eyebrow hardcoded-copy">report</p>
-              <h2 class="hardcoded-copy">타당성분석리포트</h2>
+          <section class="panel report-group-panel is-collapsed" id="report-group-panel">
+            <div class="panel-head panel-head-inline">
+              <div>
+                <p class="eyebrow hardcoded-copy">report</p>
+                <h2 class="hardcoded-copy">타당성분석 결과 리포트</h2>
+              </div>
+              <button
+                id="report-group-toggle"
+                class="collapse-toggle hardcoded-copy"
+                type="button"
+                aria-expanded="false"
+                aria-controls="report-group-panel-body"
+                aria-label="타당성분석 결과 리포트 섹션 열기 또는 닫기"
+              >+</button>
             </div>
+            <div id="report-group-panel-body" class="collapsible-body" hidden>
             <div class="report-group-stack">
               <section class="panel summary-section-panel report-subpanel">
                 <div class="panel-head">
@@ -175,6 +186,7 @@
                   </table>
                 </div>
               </section>
+            </div>
             </div>
           </section>
 

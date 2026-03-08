@@ -276,6 +276,10 @@ h2 {
   display: none !important;
 }
 
+#report-group-panel-body[hidden] {
+  display: none !important;
+}
+
 .is-collapsed .panel-head {
   margin-bottom: 0;
 }
@@ -302,6 +306,33 @@ h2 {
 }
 
 #request-info-panel.is-collapsed .collapse-toggle {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 8px 12px;
+}
+
+#report-group-panel {
+  transition: padding 180ms ease;
+}
+
+#report-group-panel.is-collapsed {
+  padding: 10px 14px;
+}
+
+#report-group-panel.is-collapsed .panel-head-inline {
+  align-items: center;
+}
+
+#report-group-panel.is-collapsed .eyebrow {
+  display: none;
+}
+
+#report-group-panel.is-collapsed .panel-head-inline h2 {
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+#report-group-panel.is-collapsed .collapse-toggle {
   min-width: 36px;
   min-height: 36px;
   padding: 8px 12px;
