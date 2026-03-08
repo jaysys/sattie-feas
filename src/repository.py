@@ -495,6 +495,60 @@ class FeasibilityRepository:
             conn.commit()
         return self.get_request_report(request_code)
 
+    def update_request(self, request_key: str, updates: dict[str, Any]) -> dict[str, Any] | None:
+        internal_request_code = self._resolve_internal_request_code(request_key)
+        if internal_request_code is None:
+            return None
+
+        request_id = self._resolve_request_id(internal_request_code)
+        if request_id is None:
+            return None
+
+        allowed_columns = {
+            "request_title": "request_title",
+            "request_description": "request_description",
+            "request_status": "request_status",
+            "request_channel": "request_channel",
+            "priority_tier": "priority_tier",
+            "requested_start_at": "requested_start_at",
+            "requested_end_at": "requested_end_at",
+            "emergency_flag": "emergency_flag",
+            "repeat_acquisition_flag": "repeat_acquisition_flag",
+            "monitoring_count": "monitoring_count",
+        }
+
+        set_clauses: list[str] = []
+        params: list[Any] = []
+        for key, column in allowed_columns.items():
+            if key not in updates:
+                continue
+            value = updates[key]
+            if key in {"emergency_flag", "repeat_acquisition_flag"}:
+                value = 1 if bool(value) else 0
+            elif key == "monitoring_count":
+                value = int(value)
+            elif key == "request_status":
+                value = str(value).upper()
+            set_clauses.append(f"{column} = ?")
+            params.append(value)
+
+        if not set_clauses:
+            return self.get_request_report(internal_request_code)
+
+        params.append(request_id)
+        sql = f"""
+        UPDATE feasibility_request
+        SET {", ".join(set_clauses)}
+        WHERE request_id = ?
+        """
+        with self._connect() as conn:
+            conn.execute(sql, tuple(params))
+            conn.commit()
+        return self.get_request_report(internal_request_code)
+
+    def cancel_request(self, request_key: str) -> dict[str, Any] | None:
+        return self.update_request(request_key, {"request_status": "CANCELLED"})
+
     def list_requests(self) -> list[dict[str, Any]]:
         sql = """
         SELECT

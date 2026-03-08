@@ -35,6 +35,13 @@ const elements = {
   summaryRisk: document.getElementById("summary-risk"),
   summaryCandidate: document.getElementById("summary-candidate"),
   summaryCandidateCaption: document.getElementById("summary-candidate-caption"),
+  proposalEyebrow: document.getElementById("proposal-eyebrow"),
+  proposalTitle: document.getElementById("proposal-title"),
+  candidateWorkbenchEyebrow: document.getElementById("candidate-workbench-eyebrow"),
+  candidateWorkbenchTitle: document.getElementById("candidate-workbench-title"),
+  candidateTableEyebrow: document.getElementById("candidate-table-eyebrow"),
+  candidateTableTitle: document.getElementById("candidate-table-title"),
+  candidateResultEyebrow: document.getElementById("candidate-result-eyebrow"),
   candidateEvaluationTitle: document.getElementById("candidate-evaluation-title"),
   proposalOverview: document.getElementById("proposal-overview"),
   requestOverview: document.getElementById("request-overview"),
@@ -43,11 +50,12 @@ const elements = {
   requestInfoPanel: document.getElementById("request-info-panel"),
   requestInfoPanelBody: document.getElementById("request-info-panel-body"),
   requestInfoToggle: document.getElementById("request-info-toggle"),
+  externalRefOpen: document.getElementById("external-ref-open"),
+  externalRefModal: document.getElementById("external-ref-modal"),
+  externalRefClose: document.getElementById("external-ref-close"),
   externalRefList: document.getElementById("external-ref-list"),
-  externalRefPanel: document.getElementById("external-ref-panel"),
-  externalRefPanelBody: document.getElementById("external-ref-panel-body"),
-  externalRefToggle: document.getElementById("external-ref-toggle"),
   externalRefForm: document.getElementById("external-ref-form"),
+  externalRefSave: document.getElementById("external-ref-save"),
   externalRefSourceSystemCode: document.getElementById("external-ref-source-system-code"),
   externalRefCode: document.getElementById("external-ref-code"),
   externalRefTitle: document.getElementById("external-ref-title"),
@@ -56,6 +64,9 @@ const elements = {
   externalRefReceivedAt: document.getElementById("external-ref-received-at"),
   externalRefIsPrimary: document.getElementById("external-ref-is-primary"),
   externalRefStatus: document.getElementById("external-ref-status"),
+  requestCreateOpen: document.getElementById("request-create-open"),
+  requestCreateModal: document.getElementById("request-create-modal"),
+  requestCreateClose: document.getElementById("request-create-close"),
   requestCreateForm: document.getElementById("request-create-form"),
   requestCreateTitle: document.getElementById("request-create-title"),
   requestCreateDescription: document.getElementById("request-create-description"),
@@ -76,8 +87,12 @@ const elements = {
   candidateTableBody: document.querySelector("#candidate-table tbody"),
   reasonList: document.getElementById("reason-list"),
   checkList: document.getElementById("check-list"),
+  probabilityTitle: document.getElementById("probability-title"),
   probabilityList: document.getElementById("probability-list"),
+  recommendationTitle: document.getElementById("recommendation-title"),
   recommendationList: document.getElementById("recommendation-list"),
+  reasonTitle: document.getElementById("reason-title"),
+  checkTitle: document.getElementById("check-title"),
   requestCandidateList: document.getElementById("request-candidate-list"),
   candidateCreateNew: document.getElementById("candidate-create-new"),
   candidateDelete: document.getElementById("candidate-delete"),
@@ -426,18 +441,23 @@ function syncRunHistoryFilterButtons() {
   elements.runHistoryActions.classList.toggle("is-active", state.runHistoryMode === "actions");
 }
 
-function syncExternalRefPanel() {
-  const expanded = !elements.externalRefPanel.classList.contains("is-collapsed");
-  elements.externalRefPanelBody.hidden = !expanded;
-  elements.externalRefToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
-  elements.externalRefToggle.textContent = expanded ? "−" : "+";
-}
-
 function syncRequestInfoPanel() {
   const expanded = !elements.requestInfoPanel.classList.contains("is-collapsed");
   elements.requestInfoPanelBody.hidden = !expanded;
   elements.requestInfoToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
   elements.requestInfoToggle.textContent = expanded ? "−" : "+";
+}
+
+function setRequestCreateModalOpen(open) {
+  const shouldOpen = Boolean(open);
+  elements.requestCreateModal.hidden = !shouldOpen;
+  document.body.classList.toggle("modal-open", shouldOpen);
+}
+
+function setExternalRefModalOpen(open) {
+  const shouldOpen = Boolean(open);
+  elements.externalRefModal.hidden = !shouldOpen;
+  document.body.classList.toggle("modal-open", shouldOpen);
 }
 
 function statusClass(status) {
@@ -514,12 +534,14 @@ function renderExternalRefs(payload) {
   }
 
   elements.externalRefSourceSystemCode.value = refs[0]?.source_system_code || "CUSTOMER_PORTAL";
-  elements.externalRefCode.value = "";
+  elements.externalRefCode.value = payload.request.external_request_code || refs[0]?.external_request_code || "";
   elements.externalRefTitle.value = "";
   elements.externalRefOrgName.value = payload.request.external_customer_org_name || payload.request.org_name || "";
   elements.externalRefRequesterName.value = payload.request.external_requester_name || payload.request.user_name || "";
   elements.externalRefReceivedAt.value = "";
   elements.externalRefIsPrimary.checked = true;
+  elements.externalRefStatus.textContent = "외부 요청번호는 읽기 전용입니다.";
+  elements.externalRefSave.disabled = true;
 }
 
 function renderSummaryTable(target, entries) {
@@ -556,6 +578,19 @@ function renderSummaryTable(target, entries) {
 
 function summaryLabel(text, tooltip) {
   return { text, tooltip };
+}
+
+function toYesNo(value) {
+  if (value === undefined || value === null) return "미확인";
+  return value ? "예" : "아니오";
+}
+
+function proposalSentence(value, formatter, suffix) {
+  if (value === undefined || value === null || value === "") {
+    return "결과값이 없습니다.";
+  }
+  const rendered = formatter ? formatter(value) : String(value);
+  return suffix ? `${rendered}${suffix}` : `${rendered}`;
 }
 
 function createStackCard(title, body, meta = []) {
@@ -1339,6 +1374,52 @@ function renderRequestScenario(payload) {
   elements.caseDescription.classList.remove("hardcoded-copy");
   elements.caseTitle.textContent = payload.request.request_title;
   elements.caseDescription.textContent = payload.request.request_description;
+  const requestTitle = String(payload.request.request_title || "").trim();
+  const requestCode = String(payload.request.request_code || "").trim();
+  if (elements.proposalEyebrow) {
+    elements.proposalEyebrow.textContent = requestCode || "proposal";
+  }
+  if (elements.proposalTitle) {
+    elements.proposalTitle.textContent = requestTitle
+      ? `'${requestTitle}'에 대한 Feasibility Analysis Summary`
+      : "촬영요청건에 대한 Feasibility Analysis Summary";
+  }
+  if (elements.candidateWorkbenchEyebrow) {
+    elements.candidateWorkbenchEyebrow.textContent = requestCode || "simulation";
+  }
+  if (elements.candidateWorkbenchTitle) {
+    elements.candidateWorkbenchTitle.textContent = requestTitle
+      ? `'${requestTitle}'에 대한 수행계획 후보별 시뮬레이션`
+      : "촬영요청건에 대한 수행계획 후보별 시뮬레이션";
+  }
+  if (elements.candidateTableEyebrow) {
+    elements.candidateTableEyebrow.textContent = requestCode || "후보 테이블";
+  }
+  if (elements.candidateTableTitle) {
+    elements.candidateTableTitle.textContent = requestTitle
+      ? `'${requestTitle}'에 대한 수행계획 후보별 검증 결과`
+      : "촬영요청건에 대한 수행계획 후보별 검증 결과";
+  }
+  if (elements.probabilityTitle) {
+    elements.probabilityTitle.textContent = requestTitle
+      ? `'${requestTitle}' 모델분해결과`
+      : "모델 분해 결과";
+  }
+  if (elements.recommendationTitle) {
+    elements.recommendationTitle.textContent = requestTitle
+      ? `'${requestTitle}' 완화 제안`
+      : "완화 제안";
+  }
+  if (elements.reasonTitle) {
+    elements.reasonTitle.textContent = requestTitle
+      ? `'${requestTitle}' 후보별 탈락 사유`
+      : "탈락 사유";
+  }
+  if (elements.checkTitle) {
+    elements.checkTitle.textContent = requestTitle
+      ? `'${requestTitle}' 자원 및 다운링크`
+      : "자원 및 다운링크";
+  }
   elements.caseRequestCode.textContent = payload.request.request_code;
   elements.caseSensorType.textContent = localizeSensorType(payload.sensor_options?.[0]?.sensor_type);
 
@@ -1369,17 +1450,17 @@ function renderRequestScenario(payload) {
     : `후보건 ${payload.request_candidates?.length ?? 0}건 관리 중`;
 
   renderSummaryTable(elements.proposalOverview, [
-    [summaryLabel("누적 성공확률", "단일 후보 1건의 확률이 아니라, 요청 하위 후보나 촬영기회를 정책상 집계 상한 범위 안에서 순차적으로 반영했을 때 최종적으로 한 번이라도 성사될 확률입니다."), formatProbability(payload.proposal?.cumulative_probability)],
-    [summaryLabel("예상 첫 촬영기회", "위성이 자동으로 첫 촬영을 시작하는 시각을 뜻하지 않습니다. 현재 요청 하위 후보나 촬영기회를 순서대로 검토했을 때, 처음으로 성사 가능성이 있는 유효 촬영기회 시각을 의미합니다."), payload.proposal?.first_feasible_attempt_at],
-    [summaryLabel("예상 촬영기회 소진 수", "위성이 같은 촬영을 자동으로 여러 번 재시도한다는 뜻이 아닙니다. 요청 하위 후보나 촬영기회를 순차 검토한다고 볼 때 평균적으로 몇 개의 촬영기회를 소진하게 되는지를 나타내는 기대값입니다."), payload.proposal?.expected_attempt_count],
-    [summaryLabel("집계 반영 후보 수", "요청 전체 누적 성공확률과 예상 촬영기회 소진 수 계산에 실제로 반영한 수행계획 후보 수입니다. 후보를 더 많이 만들어도 정책상 집계 상한을 넘는 후보는 요약 계산에서 제외될 수 있습니다."), payload.proposal?.attempt_count_considered],
-    [summaryLabel("요구 반복 횟수", "반복 촬영 또는 모니터링 요청일 때 최소 몇 번의 유효 촬영기회가 필요하다고 보는지를 나타냅니다. 일반 단건 요청이면 보통 1입니다."), payload.proposal?.required_attempt_count],
-    [summaryLabel("반복 요구 충족", "요구 반복 횟수 기준으로 유효한 기회 수가 충분한지 여부입니다. 반복 품질, 입사각 일관성, 재방문 간격 조건까지 반영한 뒤 최종 판단합니다."), payload.proposal?.repeat_requirement_met === undefined ? null : (payload.proposal.repeat_requirement_met ? "예" : "아니오")],
-    [summaryLabel("품질 반영 시도 수", "반복 품질 하한을 넘는 후보 또는 촬영기회가 몇 건인지 나타냅니다. 반복 요구 충족 판단의 첫 번째 필터입니다."), payload.proposal?.repeat_quality_attempt_count],
-    [summaryLabel("입사각 일관성 충족", "SAR 반복 촬영 후보들이 기준안 대비 허용 입사각 편차 안에 들어오는지 여부입니다. 반복 분석 품질 판단의 핵심 조건입니다."), payload.proposal?.repeat_incidence_met === undefined ? null : (payload.proposal.repeat_incidence_met ? "예" : "아니오")],
-    [summaryLabel("일관성 반영 시도 수", "반복 품질 하한을 넘고, 기준안 대비 입사각 편차 한도도 만족하는 후보 또는 촬영기회 수입니다."), payload.proposal?.repeat_incidence_consistent_count],
-    [summaryLabel("반복 간격 충족", "반복 촬영 후보들이 최소 재방문 간격 조건까지 만족하는지 여부입니다. 반복 요구 최종 충족 여부와 직접 연결됩니다."), payload.proposal?.repeat_spacing_met === undefined ? null : (payload.proposal.repeat_spacing_met ? "예" : "아니오")],
-    [summaryLabel("간격 충족 시도 수", "반복 품질과 입사각 일관성을 통과한 후보 중에서, 최소 재방문 간격 조건까지 만족한 후보 또는 촬영기회 수입니다."), payload.proposal?.repeat_spaced_attempt_count],
+    [summaryLabel("누적 성공확률", "단일 후보 1건의 확률이 아니라, 요청 하위 후보나 촬영기회를 정책상 집계 상한 범위 안에서 순차적으로 반영했을 때 최종적으로 한 번이라도 성사될 확률입니다."), proposalSentence(payload.proposal?.cumulative_probability, formatProbability, "로 계산되었습니다.")],
+    [summaryLabel("예상 첫 촬영기회", "위성이 자동으로 첫 촬영을 시작하는 시각을 뜻하지 않습니다. 현재 요청 하위 후보나 촬영기회를 순서대로 검토했을 때, 처음으로 성사 가능성이 있는 유효 촬영기회 시각을 의미합니다."), proposalSentence(payload.proposal?.first_feasible_attempt_at, null, "로 예측되었습니다.")],
+    [summaryLabel("예상 촬영기회 소진 수", "위성이 같은 촬영을 자동으로 여러 번 재시도한다는 뜻이 아닙니다. 요청 하위 후보나 촬영기회를 순차 검토한다고 볼 때 평균적으로 몇 개의 촬영기회를 소진하게 되는지를 나타내는 기대값입니다."), proposalSentence(payload.proposal?.expected_attempt_count, null, "회로 추정됩니다.")],
+    [summaryLabel("집계 반영 후보 수", "요청 전체 누적 성공확률과 예상 촬영기회 소진 수 계산에 실제로 반영한 수행계획 후보 수입니다. 후보를 더 많이 만들어도 정책상 집계 상한을 넘는 후보는 요약 계산에서 제외될 수 있습니다."), proposalSentence(payload.proposal?.attempt_count_considered, null, "건이 집계에 반영되었습니다.")],
+    [summaryLabel("요구 반복 횟수", "반복 촬영 또는 모니터링 요청일 때 최소 몇 번의 유효 촬영기회가 필요하다고 보는지를 나타냅니다. 일반 단건 요청이면 보통 1입니다."), proposalSentence(payload.proposal?.required_attempt_count, null, "회가 요구됩니다.")],
+    [summaryLabel("반복 요구 충족", "요구 반복 횟수 기준으로 유효한 기회 수가 충분한지 여부입니다. 반복 품질, 입사각 일관성, 재방문 간격 조건까지 반영한 뒤 최종 판단합니다."), `"${toYesNo(payload.proposal?.repeat_requirement_met)}"로 판정되었습니다.`],
+    [summaryLabel("품질 반영 시도 수", "반복 품질 하한을 넘는 후보 또는 촬영기회가 몇 건인지 나타냅니다. 반복 요구 충족 판단의 첫 번째 필터입니다."), proposalSentence(payload.proposal?.repeat_quality_attempt_count, null, "회가 품질 기준에 반영되었습니다.")],
+    [summaryLabel("입사각 일관성 충족", "SAR 반복 촬영 후보들이 기준안 대비 허용 입사각 편차 안에 들어오는지 여부입니다. 반복 분석 품질 판단의 핵심 조건입니다."), `"${toYesNo(payload.proposal?.repeat_incidence_met)}"로 판정되었습니다.`],
+    [summaryLabel("일관성 반영 시도 수", "반복 품질 하한을 넘고, 기준안 대비 입사각 편차 한도도 만족하는 후보 또는 촬영기회 수입니다."), proposalSentence(payload.proposal?.repeat_incidence_consistent_count, null, "회가 일관성 기준에 반영되었습니다.")],
+    [summaryLabel("반복 간격 충족", "반복 촬영 후보들이 최소 재방문 간격 조건까지 만족하는지 여부입니다. 반복 요구 최종 충족 여부와 직접 연결됩니다."), `"${toYesNo(payload.proposal?.repeat_spacing_met)}"로 판정되었습니다.`],
+    [summaryLabel("간격 충족 시도 수", "반복 품질과 입사각 일관성을 통과한 후보 중에서, 최소 재방문 간격 조건까지 만족한 후보 또는 촬영기회 수입니다."), proposalSentence(payload.proposal?.repeat_spaced_attempt_count, null, "회가 간격 기준에 반영되었습니다.")],
   ]);
 
   renderDefinitionGrid(elements.policyOverview, [
@@ -1431,8 +1512,17 @@ function renderRequestScenario(payload) {
 }
 
 function renderCandidateRun(report) {
+  if (elements.candidateResultEyebrow) {
+    elements.candidateResultEyebrow.textContent = report.candidate?.candidate_code || "후보건 결과";
+  }
   if (elements.candidateEvaluationTitle) {
-    elements.candidateEvaluationTitle.textContent = `수행계획 후보별 현재 평가 - ${report.candidate.candidate_title}`;
+    const requestTitle = String(state.activeRequestPayload?.request?.request_title || "").trim();
+    const candidateTitle = String(report.candidate?.candidate_title || "").trim();
+    elements.candidateEvaluationTitle.textContent = candidateTitle
+      ? (requestTitle
+        ? `'${requestTitle}'의 '${candidateTitle}' 수행계획 평가 결과`
+        : `'${candidateTitle}' 수행계획 평가 결과`)
+      : "수행계획 후보에 대한 평가 결과";
   }
   renderEvaluationBlock(
     {
@@ -1735,6 +1825,9 @@ function beginNewCandidateDraft() {
   }
   state.candidateDraftMode = true;
   state.activeCandidateCode = null;
+  if (elements.candidateResultEyebrow) {
+    elements.candidateResultEyebrow.textContent = "후보건 결과";
+  }
   persistSelection();
   renderRequestCandidateList(state.activeRequestPayload.request_candidates || []);
   setFormValuesFromDraft(buildDefaultCandidateDraft(state.activeRequestPayload));
@@ -1967,20 +2060,22 @@ elements.candidateDelete.addEventListener("click", async () => {
 
 elements.externalRefForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  try {
-    elements.externalRefStatus.textContent = "저장 중...";
-    await saveExternalRef();
-    elements.currentSummaryMessage.textContent = "외부 요청번호 매핑이 저장되었습니다.";
-    elements.externalRefStatus.textContent = "외부 요청번호 매핑이 저장되었습니다.";
-  } catch (error) {
-    elements.currentSummaryMessage.textContent = String(error);
-    elements.externalRefStatus.textContent = String(error);
-  }
+  elements.externalRefStatus.textContent = "외부 요청번호는 읽기 전용입니다.";
+  elements.currentSummaryMessage.textContent = "외부 요청번호는 읽기 전용입니다.";
 });
 
-elements.externalRefToggle.addEventListener("click", () => {
-  elements.externalRefPanel.classList.toggle("is-collapsed");
-  syncExternalRefPanel();
+elements.externalRefOpen.addEventListener("click", () => {
+  setExternalRefModalOpen(true);
+});
+
+elements.externalRefClose.addEventListener("click", () => {
+  setExternalRefModalOpen(false);
+});
+
+elements.externalRefModal.addEventListener("click", (event) => {
+  if (event.target === elements.externalRefModal) {
+    setExternalRefModalOpen(false);
+  }
 });
 
 elements.requestInfoToggle.addEventListener("click", () => {
@@ -1992,6 +2087,7 @@ elements.requestCreateForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
     await createRequestFromForm();
+    setRequestCreateModalOpen(false);
     elements.requestCreateTitle.value = "";
     elements.requestCreateDescription.value = "";
     elements.requestCreateExternalCode.value = "";
@@ -2004,6 +2100,32 @@ elements.requestCreateForm.addEventListener("submit", async (event) => {
 elements.requestCreatePolicy.addEventListener("change", () => {
   const isSar = Number(elements.requestCreatePolicy.value) === 2;
   elements.requestCreatePriority.value = isSar ? "PRIORITY" : "STANDARD";
+});
+
+elements.requestCreateOpen.addEventListener("click", () => {
+  setRequestCreateModalOpen(true);
+});
+
+elements.requestCreateClose.addEventListener("click", () => {
+  setRequestCreateModalOpen(false);
+});
+
+elements.requestCreateModal.addEventListener("click", (event) => {
+  if (event.target === elements.requestCreateModal) {
+    setRequestCreateModalOpen(false);
+  }
+});
+
+window.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") {
+    return;
+  }
+  if (!elements.requestCreateModal.hidden) {
+    setRequestCreateModalOpen(false);
+  }
+  if (!elements.externalRefModal.hidden) {
+    setExternalRefModalOpen(false);
+  }
 });
 
 elements.runHistoryAll.addEventListener("click", () => {
@@ -2033,7 +2155,6 @@ elements.runHistoryActions.addEventListener("click", () => {
 async function bootstrapPage() {
   try {
     syncRequestInfoPanel();
-    syncExternalRefPanel();
     await fetchRequestCatalog();
     const persisted = loadPersistedSelection();
     const initialRequest = state.requestCatalog.find(
